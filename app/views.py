@@ -11,6 +11,9 @@ from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
 
 
 class ProductView(View):
@@ -20,14 +23,14 @@ class ProductView(View):
         bottomwear=Product.objects.filter(category='BW')
         mobile=Product.objects.filter(category='M')
         return render(request,'app/home.html',{'topwear':topwear,'bottomwear':bottomwear,'mobile':mobile,'totalitem':totalitem})
-    
+
 class ProductDetailsView(View):
     def get(self,request,pk):
         product=Product.objects.get(pk=pk)
         return render(request,'app/productdetail.html',{'product':product})
     
 
-
+@login_required
 def add_to_cart(request):
     user=request.user
     product_id=request.GET.get('prod_id')
@@ -35,6 +38,7 @@ def add_to_cart(request):
     Cart(user=user,product=product).save()
     return redirect('/cart')
 
+@login_required
 def show_cart(request):
     if request.user.is_authenticated:
         user=request.user
@@ -53,7 +57,7 @@ def show_cart(request):
         else:
             return render(request,'app/emptycart.html')
         
-        
+@login_required     
 def plus_cart(request):
     if request.method=='GET':
         prod_id=request.GET['prod_id']
@@ -78,7 +82,7 @@ def plus_cart(request):
             }
             return JsonResponse(data)
             
-        
+@login_required      
 def minus_cart(request):
     if request.method=='GET':
         prod_id=request.GET['prod_id']
@@ -104,7 +108,7 @@ def minus_cart(request):
             return JsonResponse(data)       
 
 
-
+@login_required
 def remove_cart(request):
     if request.method == 'GET':
         prod_id = request.GET['prod_id']
@@ -137,14 +141,13 @@ def remove_cart(request):
 
         return JsonResponse(data)
 
-            
-            
-            
-            
-            
+                      
+@login_required          
 def buy_now(request):
  return render(request, 'app/buynow.html')
 
+
+@method_decorator(login_required,name='dispatch')
 class ProfileView(View):
     def get(self, request):
         form = CustomerProfileForm()
@@ -164,11 +167,12 @@ class ProfileView(View):
             messages.success(request, 'Address added successfully!')
         return render(request, 'app/profile.html', {'form': form, 'active': 'btn-primary'})
 
-
+@login_required
 def address(request):
     add=Customer.objects.filter(user=request.user)
     return render(request, 'app/address.html',{'add':add,'active':'btn-primary'})
 
+@login_required
 def orders(request):
     user=request.user
     op = OrderPlaced.objects.filter(user=request.user)
@@ -177,6 +181,7 @@ def orders(request):
 def change_password(request):
  return render(request, 'app/changepassword.html')
 
+@login_required
 def mobile(request, data=None):
     if data:
         # Use `__in` lookup to handle multiple brand names
@@ -210,7 +215,7 @@ class CustomRegistrationForm(View):
         return render(request,'app/customerregistration.html',{'form':form})
         
         
-
+@login_required
 def checkout(request):
     user=request.user
     add=Customer.objects.filter(user=user)
@@ -225,7 +230,7 @@ def checkout(request):
         total_amount = amount + shipping_amt
     return render(request, 'app/checkout.html',{'add':add,'total_amount':total_amount,'cart_product':cart_product})
 
-
+@login_required
 def payment_done(request):
 	custid = request.GET.get('custid')
 	# print("Customer ID", custid)
