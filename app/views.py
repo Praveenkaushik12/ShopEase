@@ -260,6 +260,8 @@ class CustomRegistrationForm(View):
     def post(self,request):
         form=CustomerRegistrationForm(request.POST)
         if form.is_valid():
+            # user = form.save(commit=False)  # Create user instance but don't save yet
+            # user.auth_method = 'password'
             messages.success(request,"Congratulations! You have been successfully registered!")
             form.save()
         return render(request,'app/customerregistration.html',{'form':form})
