@@ -49,3 +49,7 @@ class CustomerProfileForm(forms.ModelForm):
     widgets = {'name':forms.TextInput(attrs={'class':'form-control'}),'locality':forms.TextInput(attrs={'class':'form-control'}), 'city':forms.TextInput(attrs={'class':'form-control'}), 
     'state':forms.Select(attrs={'class':'form-control'}),
     'zipcode':forms.NumberInput(attrs={'class':'form-control'})}
+    
+    
+# class SearchForm(forms.Form):
+#     query = forms.CharField(max_length=100, required=False)

@@ -1,0 +1,41 @@
+{% extends 'app/base.html' %}
+
+{% block main-content %}
+<div class="col-sm-12">
+    <div class="card">
+      <div class="card-body">
+        <h3>Available Results...</h3>
+        <hr class="text-muted">
+        
+        {% for product in products %}
+        <div class="row mb-3">
+          <div class="col-sm-3 text-center">
+            <a href="{% url 'product-detail' product.id %}" class="text-decoration-none">
+              <img src="{{product.product_image.url}}" alt="" class="img-fluid img-thumbnail shadow-sm" height="150" width="150">
+            </a>
+          </div>
+          <div class="col-sm-9">
+            <div>
+              <a href="{% url 'product-detail' product.id %}" class="text-decoration-none custom-link">
+                <h5>{{product.title}}</h5>
+              </a>
+              <p class="mb-2 text-muted small">{{product.description}}</p>
+            </div>
+          </div>
+        </div>
+        <hr class="text-muted">
+        {% empty %}
+        <div class="row mb-3">
+            <h2>No Product Found</h2> 
+        </div>
+
+        {% endfor %}
+    
+        
+      </div>
+    </div>
+  </div>
+<div>
+    
+{% endblock main-content %}
+    

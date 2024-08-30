@@ -29,9 +29,10 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('paymentdone/',views.payment_done,name='paymentdone'),
      # path('', views.home),
-    
+    path('products/', views.product_list, name='product_list'),
    
     path('buy/', views.buy_now, name='buy-now'),
+    path('order/cancel/<int:pk>/',views.cancel_order,name='cancel_order'),
     
     
     path('orders/', views.orders, name='orders'),

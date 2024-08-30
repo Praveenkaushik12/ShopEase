@@ -7,6 +7,7 @@
         <div class="col-sm-6">
             <h4>Order Summary</h4>
             <hr>
+
             {% for cp in cart_product %}
                 <div class="card mb-2">
                     <div class="card-body">
@@ -26,6 +27,13 @@
         <div class="col-sm-4 offset-sm-1">
             <h4>Select Shipping Address</h4>
             <hr>
+            {% if messages %}
+                <div class="alert alert-danger">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
             <form action="/paymentdone">
               {% for ad in add %}
                 <div class="card">

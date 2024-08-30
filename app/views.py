@@ -9,7 +9,7 @@ from .models import (
 from .forms import CustomerRegistrationForm,CustomerProfileForm
 from django.contrib import messages
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -23,17 +23,22 @@ class ProductView(View):
         topwear=Product.objects.filter(category='TW')
         bottomwear=Product.objects.filter(category='BW')
         mobile=Product.objects.filter(category='M')
+        if request.user.is_authenticated:
+            totalitem = len(Cart.objects.filter(user=request.user))
         return render(request,'app/home.html',{'topwear':topwear,'bottomwear':bottomwear,'mobile':mobile,'totalitem':totalitem})
 
 class ProductDetailsView(View):
     @method_decorator(never_cache)
     def get(self,request,pk):
         user=request.user
+        totalitem=0
         product = get_object_or_404(Product, pk=pk)
-        in_cart = Cart.objects.filter(user=user, product=product).exists()
-    
+        in_cart=False
+        if request.user.is_authenticated:
+            in_cart = Cart.objects.filter(user=user, product=product).exists()
+            totalitem = len(Cart.objects.filter(user=request.user))
         
-        return render(request,'app/productdetail.html',{'product':product,'in_cart':in_cart})
+        return render(request,'app/productdetail.html',{'product':product,'in_cart':in_cart,'totalitem':totalitem})
     
 
 @login_required
@@ -47,21 +52,23 @@ def add_to_cart(request):
 @login_required
 def show_cart(request):
     if request.user.is_authenticated:
+        totalitem=0
         user=request.user
         cart=Cart.objects.filter(user=user)
         amount=0.0
         shipping_amt=50.0
         total_amount=0.0
         cart_product=[p for p in Cart.objects.all() if p.user==user]
+        totalitem=len(Cart.objects.filter(user=user))
         
         if cart_product:
             for p in cart_product:
                 temp_amt=(p.quantity* p.product.discounted_price)
                 amount+=temp_amt
             total_amount=amount+shipping_amt
-            return render(request,'app/addtocart.html',{'carts':cart,'amount':amount,'total_amount':total_amount})
+            return render(request,'app/addtocart.html',{'carts':cart,'amount':amount,'total_amount':total_amount,'totalitem':totalitem})
         else:
-            return render(request,'app/emptycart.html')
+            return render(request,'app/emptycart.html',{'totalitem':totalitem})
         
 @login_required     
 def plus_cart(request):
@@ -150,7 +157,28 @@ def remove_cart(request):
                       
 @login_required          
 def buy_now(request):
- return render(request, 'app/buynow.html')
+    if request.user.is_authenticated:
+        user=request.user
+        totalitem=0
+        totalitem=len(Cart.objects.filter(user=user))
+        
+    if request.method == 'POST':
+        product_id = request.POST.get('prod_id')
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Check if the product is already in the cart for the current user
+        existing_cart_item = Cart.objects.filter(user=request.user, product=product).first()
+        
+        if existing_cart_item:
+            # Product is already in the cart, don't add a duplicate entry
+            return redirect('/checkout',{'totalitem':totalitem})
+        
+        # Add the product to the cart if it's not already present
+        Cart(user=request.user, product=product).save()
+        
+        return redirect('/checkout',{'totalitem':totalitem})
+    else:
+        return redirect('/')
 
 
 @method_decorator(login_required,name='dispatch')
@@ -180,14 +208,30 @@ def address(request):
 
 @login_required
 def orders(request):
+    totalitem=0
     user=request.user
     op = OrderPlaced.objects.filter(user=request.user)
-    return render(request, 'app/orders.html', {'order_placed':op,'user':user})
+    totalitem = len(Cart.objects.filter(user=request.user))
+    return render(request, 'app/orders.html', {'order_placed':op,'user':user,'totalitem':totalitem})
 
 def change_password(request):
  return render(request, 'app/changepassword.html')
 
+
 @login_required
+def cancel_order(request,pk):
+    if request.method=='POST':
+        order=get_object_or_404(OrderPlaced,id=pk,user=request.user)
+        order.delete()
+        return redirect('orders')
+    else:
+        return redirect('/')
+        
+        
+        
+    
+
+
 def mobile(request, data=None):
     if data:
         # Use `__in` lookup to handle multiple brand names
@@ -224,28 +268,57 @@ class CustomRegistrationForm(View):
 @login_required
 def checkout(request):
     user=request.user
+    totalitem=0
+    totalitem=len(Cart.objects.filter(user=user))
     add=Customer.objects.filter(user=user)
     amount = 0.0
     shipping_amt = 50.0
     total_amount = 0.0
     cart_product = [p for p in Cart.objects.all() if p.user == request.user]
+
+        
     if cart_product:
         for p in cart_product:
             temp_amt = p.quantity * p.product.discounted_price
             amount += temp_amt
         total_amount = amount + shipping_amt
-    return render(request, 'app/checkout.html',{'add':add,'total_amount':total_amount,'cart_product':cart_product})
+    return render(request, 'app/checkout.html',{'add':add,'total_amount':total_amount,'cart_product':cart_product,'totalitem':totalitem})
+
+
 
 @login_required
 def payment_done(request):
-	custid = request.GET.get('custid')
-	# print("Customer ID", custid)
-	user = request.user
-	carts = Cart.objects.filter(user = user)
-	customer = Customer.objects.get(id=custid)
-	# print(customer)
-	for cid in carts:
-		OrderPlaced(user=user, customer=customer, product=cid.product, quantity=cid.quantity).save()
-		cid.delete()
-	return redirect("orders")
-    
+    custid = request.GET.get('custid')
+    user = request.user
+
+    if not custid:
+        messages.error(request, 'Please select a shipping address.')
+        return redirect('/checkout')
+
+    try:
+        customer = Customer.objects.get(id=custid)
+    except Customer.DoesNotExist:
+        messages.error(request, 'Selected address is invalid. Please select a valid address.')
+        return redirect('/checkout')
+
+    # Process the cart items
+    cart_items = Cart.objects.filter(user=user)
+    for item in cart_items:
+        OrderPlaced(user=user, customer=customer, product=item.product, quantity=item.quantity).save()
+        item.delete()
+
+    return redirect("orders")
+
+
+
+
+
+def product_list(request):
+    query = request.GET.get('query','').strip()
+    products = Product.objects.all()
+
+    if query:
+        products = products.filter(title__icontains=query)
+        return render(request, 'app/product_list.html', {'products':products})
+    else:
+        return redirect('/')

@@ -88,6 +88,7 @@ class Cart(models.Model):
         return self.quantity*self.product.discounted_price
 
 STATUS_CHOICES=(
+    ('Pending','Pending'),
     ('Accepted','Accepted'),
     ('Packed','Packed'),
     ('On The Way','On The Way'),

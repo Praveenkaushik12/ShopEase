@@ -43,6 +43,12 @@
                   <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
                 {% endif %}
+                {% if op.status in "Accepted, Packed, Pending" %}
+                <form action="{% url 'cancel_order' op.id %}" method="post" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger">Cancel Order</button>
+                </form>
+                {% endif %}
               </div>
             </div>
           </a>
