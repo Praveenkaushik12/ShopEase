@@ -14,8 +14,8 @@
       <div class="row">
         {% for op in order_placed %}
         <div class="col-12 mb-4">
-          <a href="{% url 'product-detail' op.product.id %}" class="text-decoration-none text-black">
-            <div class="row shadow-sm p-3 bg-white rounded align-items-center hover-shadow">
+          <a href="{% url 'product-detail' op.product.id %}" class="text-decoration-none custom-link">
+            <div class="row shadow-sm p-3 bg-white rounded align-items-center">
               <div class="col-sm-2">
                 <img src="{{op.product.product_image.url}}" alt="" class="img-fluid rounded" height="150" width="150">
               </div>

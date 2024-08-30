@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 
 
 
@@ -25,9 +26,14 @@ class ProductView(View):
         return render(request,'app/home.html',{'topwear':topwear,'bottomwear':bottomwear,'mobile':mobile,'totalitem':totalitem})
 
 class ProductDetailsView(View):
+    @method_decorator(never_cache)
     def get(self,request,pk):
-        product=Product.objects.get(pk=pk)
-        return render(request,'app/productdetail.html',{'product':product})
+        user=request.user
+        product = get_object_or_404(Product, pk=pk)
+        in_cart = Cart.objects.filter(user=user, product=product).exists()
+    
+        
+        return render(request,'app/productdetail.html',{'product':product,'in_cart':in_cart})
     
 
 @login_required
