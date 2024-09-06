@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 from app import views
@@ -36,6 +36,8 @@ urlpatterns = [
     
     
     path('orders/', views.orders, name='orders'),
+    
+    path('api/',include('api.urls')),
     
     
     
