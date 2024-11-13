@@ -127,3 +127,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend'
+
+
+ALLOWED_HOSTS = ['web-production-c048.up.railway.app', 'localhost']
