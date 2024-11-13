@@ -4,6 +4,9 @@ from django.conf.urls.static import static
 from app import views
 from django.contrib.auth import views as auth_views
 from .forms import LoginForm,MyPasswordChangeForm,MyPasswordResetForm,MySetPasswordForm
+
+# app_name = 'app'  # Add this to namespace URLs for the main app
+
 urlpatterns = [
     
     path('',views.ProductView.as_view(),name='home'),

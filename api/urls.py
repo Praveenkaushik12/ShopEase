@@ -6,6 +6,7 @@ from .views import (
     CartViewSet,
     OrderPlacedViewSet
 )
+app_name = 'api'  # Add this to namespace URLs for the API
 
 router=DefaultRouter()
 router.register(r'customers',CustomerViewSet)
