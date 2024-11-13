@@ -130,3 +130,5 @@ EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend'
 
 
 ALLOWED_HOSTS = ['web-production-c048.up.railway.app', 'localhost']
+
+DEBUG = True
