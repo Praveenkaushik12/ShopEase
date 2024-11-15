@@ -137,6 +137,10 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+# In settings.py
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-999b7.up.railway.app',
+]
 
 
 # In settings.py
